@@ -1,3 +1,8 @@
+/*
+ * unpackelf.c by tobias.waldvogel @ xda-developers
+ * http://forum.xda-developers.com/xperia-z5/development/root-automatic-repack-stock-kernel-dm-t3301605
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
