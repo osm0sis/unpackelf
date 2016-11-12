@@ -343,9 +343,17 @@ int main(int argc, char** argv)
 	if (obj_off[1] > 0x10000000)
 		base = obj_off[0] - 0x00008000;
 	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
-	for (i=0; i<=2; i++) {
-		if (!out_file[i] || !obj_len[i])
+	for (i=0; i<=3; i++) {
+		if (!obj_len[i])
 			continue;
+
+		if (obj_len[i] <= 4096) {
+			if (i>2)
+				obj[i] = obj[i]+8;
+			obj[i][strcspn(obj[i], "\n")] = 0;
+			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
+			continue;
+		}
 
 		f = fopen(out_file[i], "wb+");
 		if (!f)
@@ -358,10 +366,6 @@ int main(int argc, char** argv)
 			printf("BOARD_QCDT=\"1\"\n");
 	}
 
-	if (obj_len[3]) {
-		obj[3][obj_len[3]] = 0;
-		printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[3]+8);
-	}
 	printf("BOARD_PAGE_SIZE=\"%d\"\n", 4096);
 	return 0;
 }
