@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 		base = obj_off[0] - 0x00008000;
 	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 	for (i=0; i<=2; i++) {
-		if (!out_file[i])
+		if (!out_file[i] || !obj_len[i])
 			continue;
 
 		f = fopen(out_file[i], "wb+");
