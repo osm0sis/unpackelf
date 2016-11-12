@@ -133,7 +133,9 @@ typedef struct elf64_shdr {
 } Elf64_Shdr;
 
 FILE			*f = NULL;
+FILE			*tmp = NULL;
 static char		*obj_name[] = { "KERNEL", "RAMDISK", "TAGS" };
+static char		*off_name[] = { "kerneloff", "ramdiskoff", "tagsoff" };
 unsigned char	*obj[4] = { NULL, NULL, NULL, NULL };
 size_t			obj_len[4];
 __u32			obj_off[4];
@@ -306,6 +308,8 @@ int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
 	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dtb" };
+	char	outtmp[200];
+	int		pagesize = 4096;	/* hardcoded as there is no way to determine it from the ELF header */
 	int		base = 0;
 	int		i;
 
@@ -343,6 +347,11 @@ int main(int argc, char** argv)
 	if (obj_off[1] > 0x10000000)
 		base = obj_off[0] - 0x00008000;
 	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
+	sprintf(outtmp, "%08x", base);
+	tmp = fopen("base", "w");
+	fwrite(outtmp, 8, 1, tmp);
+	fwrite("\n", 1, 1, tmp);
+	fclose(tmp);
 	for (i=0; i<=3; i++) {
 		if (!obj_len[i])
 			continue;
@@ -352,6 +361,10 @@ int main(int argc, char** argv)
 				obj[i] = obj[i]+8;
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
+			tmp = fopen("cmdline", "w");
+			fwrite(obj[i], strlen(obj[i]), 1, tmp);
+			fwrite("\n", 1, 1, tmp);
+			fclose(tmp);
 			continue;
 		}
 
@@ -362,8 +375,18 @@ int main(int argc, char** argv)
 		fclose(f);
 
 		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
+		sprintf(outtmp, "%08x", obj_off[i] - base);
+		tmp = fopen(off_name[i], "w");
+		fwrite(outtmp, 8, 1, tmp);
+		fwrite("\n", 1, 1, tmp);
+		fclose(tmp);
 	}
 
-	printf("BOARD_PAGE_SIZE=\"%d\"\n", 4096);
+	printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
+	sprintf(outtmp, "%d", pagesize);
+	tmp = fopen("pagesize", "w");
+	fwrite(outtmp, 4, 1, tmp);
+	fwrite("\n", 1, 1, tmp);
+	fclose(tmp);
 	return 0;
 }
