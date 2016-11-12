@@ -305,7 +305,7 @@ int unpackelf_usage()
 int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
-	char	*out_file[3] = { NULL, NULL, NULL };
+	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dtb" };
 	int		i;
 
 	argc--;
