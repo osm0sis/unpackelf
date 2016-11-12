@@ -298,7 +298,7 @@ void read_elf(char *kernelimg)
 
 int unpackelf_usage()
 {
-	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [-k kernel | -r ramdisk | -d dtb | q ]\n\n");
+	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [-k kernel | -r ramdisk | -d dtb | -q ]\n\n");
 	return 200;
 }
 
@@ -362,8 +362,6 @@ int main(int argc, char** argv)
 		fclose(f);
 
 		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
-		if (obj_len[i] > 4 && 0 == memcmp(obj[i], "QCDT", 4))
-			printf("BOARD_QCDT=\"1\"\n");
 	}
 
 	printf("BOARD_PAGE_SIZE=\"%d\"\n", 4096);
