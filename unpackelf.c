@@ -306,6 +306,7 @@ int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
 	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dtb" };
+	int		base = 0;
 	int		i;
 
 	argc--;
@@ -339,6 +340,9 @@ int main(int argc, char** argv)
 		return unpackelf_usage();
 
 	read_elf(image_file);
+	if (obj_off[1] > 0x10000000)
+		base = obj_off[0] - 0x00008000;
+	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 	for (i=0; i<=2; i++) {
 		if (!out_file[i])
 			continue;
@@ -349,7 +353,7 @@ int main(int argc, char** argv)
 		fwrite(obj[i], 1, obj_len[i], f);
 		fclose(f);
 
-		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i]);
+		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 		if (obj_len[i] > 4 && 0 == memcmp(obj[i], "QCDT", 4))
 			printf("BOARD_QCDT=\"1\"\n");
 	}
