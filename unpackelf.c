@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
 
 typedef uint16_t	__u16;
 typedef int16_t		__s16;
@@ -133,7 +134,6 @@ typedef struct elf64_shdr {
 } Elf64_Shdr;
 
 FILE			*f = NULL;
-FILE			*tmp = NULL;
 static char		*obj_name[] = { "KERNEL", "RAMDISK", "TAGS" };
 static char		*off_name[] = { "kerneloff", "ramdiskoff", "tagsoff" };
 unsigned char	*obj[4] = { NULL, NULL, NULL, NULL };
@@ -300,15 +300,27 @@ void read_elf(char *kernelimg)
 
 int unpackelf_usage()
 {
-	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [-k kernel | -r ramdisk | -d dtb | -q ]\n\n");
+	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [ -o output_dir | -k kernel | -r ramdisk | -d dtb | -q ]\n\n");
 	return 200;
+}
+
+void fwrite_str(char* file, char* output)
+{
+	f = fopen(file, "w");
+	if (!f)
+		die(1, "Could not open file %s for writing\n\n", file);
+	fwrite(output, strlen(output), 1, f);
+	fwrite("\n", 1, 1, f);
+	fclose(f);
 }
 
 int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
 	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dtb" };
-	char	outtmp[200];
+	char	*out_dir = "./";
+	char	out_name[PATH_MAX];
+	char	out_tmp[200];
 	int		pagesize = 4096;	/* hardcoded as there is no way to determine it from the ELF header */
 	int		base = 0;
 	int		i;
@@ -327,6 +339,8 @@ int main(int argc, char** argv)
 			argv += 2;
 			if (!strcmp(arg, "-i"))
 				image_file = val;
+			else if (!strcmp(arg, "-o"))
+				out_dir = val;
 			else if (!strcmp(arg, "-k"))
 				out_file[0] = val;
 			else if (!strcmp(arg, "-r"))
@@ -347,11 +361,10 @@ int main(int argc, char** argv)
 	if (obj_off[1] > 0x10000000)
 		base = obj_off[0] - 0x00008000;
 	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
-	sprintf(outtmp, "%08x", base);
-	tmp = fopen("base", "w");
-	fwrite(outtmp, 8, 1, tmp);
-	fwrite("\n", 1, 1, tmp);
-	fclose(tmp);
+	sprintf(out_tmp, "%08x", base);
+	sprintf(out_name, "%s/base", out_dir);
+	fwrite_str(out_name, out_tmp);
+
 	for (i=0; i<=3; i++) {
 		if (!obj_len[i])
 			continue;
@@ -361,32 +374,27 @@ int main(int argc, char** argv)
 				obj[i] = obj[i]+8;
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
-			tmp = fopen("cmdline", "w");
-			fwrite(obj[i], strlen(obj[i]), 1, tmp);
-			fwrite("\n", 1, 1, tmp);
-			fclose(tmp);
+			sprintf(out_name, "%s/cmdline", out_dir);
+			fwrite_str(out_name, obj[i]);
 			continue;
 		}
 
-		f = fopen(out_file[i], "wb+");
+		sprintf(out_name, "%s/%s", out_dir, out_file[i]);
+		f = fopen(out_name, "wb+");
 		if (!f)
-			die(1, "Could not open file %s for writing\n\n", out_file[i]);
+			die(1, "Could not open file %s for writing\n\n", out_name);
 		fwrite(obj[i], 1, obj_len[i], f);
 		fclose(f);
 
 		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
-		sprintf(outtmp, "%08x", obj_off[i] - base);
-		tmp = fopen(off_name[i], "w");
-		fwrite(outtmp, 8, 1, tmp);
-		fwrite("\n", 1, 1, tmp);
-		fclose(tmp);
+		sprintf(out_tmp, "%08x", obj_off[i] - base);
+		sprintf(out_name, "%s/%s", out_dir, off_name[i]);
+		fwrite_str(out_name, out_tmp);
 	}
 
 	printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
-	sprintf(outtmp, "%d", pagesize);
-	tmp = fopen("pagesize", "w");
-	fwrite(outtmp, 4, 1, tmp);
-	fwrite("\n", 1, 1, tmp);
-	fclose(tmp);
+	sprintf(out_tmp, "%d", pagesize);
+	sprintf(out_name, "%s/pagesize", out_dir);
+	fwrite_str(out_name, out_tmp);
 	return 0;
 }
