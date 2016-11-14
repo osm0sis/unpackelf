@@ -361,10 +361,10 @@ int main(int argc, char** argv)
 	read_elf(image_file);
 	if (obj_off[1] > 0x10000000)
 		base = obj_off[0] - 0x00008000;
-	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 	sprintf(out_tmp, "%08x", base);
 	sprintf(out_name, "%s/%s-base", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
+	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 
 	for (i=0; i<=3; i++) {
 		if (!obj_len[i])
@@ -374,9 +374,9 @@ int main(int argc, char** argv)
 			if (i>2)
 				obj[i] = obj[i]+8;
 			obj[i][strcspn(obj[i], "\n")] = 0;
-			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
 			fwrite_str(out_name, obj[i]);
+			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
 			continue;
 		}
 
@@ -387,15 +387,15 @@ int main(int argc, char** argv)
 		fwrite(obj[i], 1, obj_len[i], f);
 		fclose(f);
 
-		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 		sprintf(out_tmp, "%08x", obj_off[i] - base);
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), off_name[i]);
 		fwrite_str(out_name, out_tmp);
+		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 	}
 
-	printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
 	sprintf(out_tmp, "%d", pagesize);
 	sprintf(out_name, "%s/%s-pagesize", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
+	printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
 	return 0;
 }
