@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <libgen.h>
 
 typedef uint16_t	__u16;
 typedef int16_t		__s16;
@@ -362,7 +363,7 @@ int main(int argc, char** argv)
 		base = obj_off[0] - 0x00008000;
 	printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 	sprintf(out_tmp, "%08x", base);
-	sprintf(out_name, "%s/base", out_dir);
+	sprintf(out_name, "%s/%s-base", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
 
 	for (i=0; i<=3; i++) {
@@ -374,12 +375,12 @@ int main(int argc, char** argv)
 				obj[i] = obj[i]+8;
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
-			sprintf(out_name, "%s/cmdline", out_dir);
+			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
 			fwrite_str(out_name, obj[i]);
 			continue;
 		}
 
-		sprintf(out_name, "%s/%s", out_dir, out_file[i]);
+		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), out_file[i]);
 		f = fopen(out_name, "wb+");
 		if (!f)
 			die(1, "Could not open file %s for writing\n\n", out_name);
@@ -388,13 +389,13 @@ int main(int argc, char** argv)
 
 		printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 		sprintf(out_tmp, "%08x", obj_off[i] - base);
-		sprintf(out_name, "%s/%s", out_dir, off_name[i]);
+		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), off_name[i]);
 		fwrite_str(out_name, out_tmp);
 	}
 
 	printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
 	sprintf(out_tmp, "%d", pagesize);
-	sprintf(out_name, "%s/pagesize", out_dir);
+	sprintf(out_name, "%s/%s-pagesize", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
 	return 0;
 }
