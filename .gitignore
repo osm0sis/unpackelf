@@ -1,3 +1,5 @@
 *.o
 unpackelf.exe
+unpackelf-static.exe
 unpackelf
+unpackelf-static
