@@ -11,27 +11,27 @@
 #include <limits.h>
 #include <libgen.h>
 
-typedef uint16_t	__u16;
-typedef int16_t		__s16;
-typedef uint32_t	__u32;
-typedef int32_t		__s32;
-typedef uint64_t	__u64;
-typedef int64_t		__s64;
+typedef uint16_t	__u16t;
+typedef int16_t		__s16t;
+typedef uint32_t	__u32t;
+typedef int32_t		__s32t;
+typedef uint64_t	__u64t;
+typedef int64_t		__s64t;
 
-typedef __u32	Elf32_Addr;
-typedef __u16	Elf32_Half;
-typedef __u32	Elf32_Off;
-typedef __s32	Elf32_Sword;
-typedef __u32	Elf32_Word;
+typedef __u32t	Elf32_Addr;
+typedef __u16t	Elf32_Half;
+typedef __u32t	Elf32_Off;
+typedef __s32t	Elf32_Sword;
+typedef __u32t	Elf32_Word;
 
-typedef __u64	Elf64_Addr;
-typedef __u16	Elf64_Half;
-typedef __s16	Elf64_SHalf;
-typedef __u64	Elf64_Off;
-typedef __s32	Elf64_Sword;
-typedef __u32	Elf64_Word;
-typedef __u64	Elf64_Xword;
-typedef __s64	Elf64_Sxword;
+typedef __u64t	Elf64_Addr;
+typedef __u16t	Elf64_Half;
+typedef __s16t	Elf64_SHalf;
+typedef __u64t	Elf64_Off;
+typedef __s32t	Elf64_Sword;
+typedef __u32t	Elf64_Word;
+typedef __u64t	Elf64_Xword;
+typedef __s64t	Elf64_Sxword;
 
 #define EI_MAG0			0
 #define EI_MAG1			1
@@ -139,7 +139,7 @@ static char		*obj_name[] = { "KERNEL", "RAMDISK", "TAGS" };
 static char		*off_name[] = { "kerneloff", "ramdiskoff", "tagsoff" };
 unsigned char	*obj[4] = { NULL, NULL, NULL, NULL };
 size_t			obj_len[4];
-__u32			obj_off[4];
+__u32t			obj_off[4];
 
 unsigned char	buffer[4096];	
 int				unpackelf_quiet = 0;
@@ -281,7 +281,7 @@ void read_elf(char *kernelimg)
 			obj[i] = (unsigned char*)malloc(obj_len[i]);
 			fseek(f, (long)ph64[i].p_offset, SEEK_SET);
 			fread(obj[i], 1, obj_len[i], f);
-			obj_off[i] = (__u32)ph64[i].p_paddr;
+			obj_off[i] = (__u32t)ph64[i].p_paddr;
 		}
 
 		if (elf64.e_shnum) {
