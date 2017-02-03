@@ -1,6 +1,6 @@
 /*
  * unpackelf.c by tobias.waldvogel @ xda-developers
- * http://forum.xda-developers.com/xperia-z5/development/root-automatic-repack-stock-kernel-dm-t3301605
+ * https://github.com/tobiaswaldvogel/and_boot_tools/blob/master/bootimg/unpackelf.c
  */
 
 #include <stdlib.h>
@@ -157,10 +157,11 @@ void die(int rc, const char *why, ...)
 {
 	va_list	ap;
 
-	if (why && unpackelf_quiet == 0) {
+	if (why && !unpackelf_quiet) {
 		va_start(ap, why);
 		fprintf(stderr,"error: ");
 		vfprintf(stderr, why, ap);
+		fprintf(stderr,"\n\n");
 		va_end(ap);
 	}
 
@@ -175,14 +176,14 @@ void read_elf(char *kernelimg)
 
 	f = fopen(kernelimg, "rb");
 	if (!f)
-		die(1, "Could not open kernel image %s\n\n", kernelimg);
+		die(1, "Could not open kernel image %s", kernelimg);
 
 	fread(buffer, 1, sizeof(buffer), f);
 	if (buffer[EI_MAG0] != 0x7f ||
 		buffer[EI_MAG1] != 'E' ||
 		buffer[EI_MAG2] != 'L' ||
 		buffer[EI_MAG3] != 'F' )
-		die(1, "No ELF header found\n\n");
+		die(1, "No ELF header found");
 
 	fseek(f, 0, SEEK_SET);
 
@@ -196,33 +197,30 @@ void read_elf(char *kernelimg)
 		fread(&elf32, 1, sizeof(elf32), f);
 
 		if (elf32.e_ehsize != sizeof(elf32))
-			die(1, "Header size not %d\n\n", sizeof(elf32));
+			die(1, "Header size not %d", sizeof(elf32));
 
 		if (elf32.e_machine != EM_ARM)
-			die(1, "ELF machine is not ARM\n\n");
+			die(1, "ELF machine is not ARM");
 
 		if (elf32.e_version != 1)
-			die(1, "Unknown ELF version\n\n");
+			die(1, "Unknown ELF version");
 
 		if (elf32.e_phentsize != sizeof(ph32[0]))
-			die(1, "Program header size not %d\n\n", sizeof(ph32[0]));
+			die(1, "Program header size not %d", sizeof(ph32[0]));
 
-		if (elf32.e_phnum <= 1 || elf32.e_phnum > 3)
-			die(1, "Unexpected number of elements: %d\n\n", elf32.e_phnum);
+		if (elf32.e_phnum < 2 || elf32.e_phnum > 3)
+			die(1, "Unexpected number of elements: %d", elf32.e_phnum);
 
 		if (elf32.e_shnum && elf32.e_shentsize != sizeof(sh32))
-			die(1, "Section header size not %d\n\n", sizeof(sh32));
+			die(1, "Section header size not %d", sizeof(sh32));
 
 		if (elf32.e_shnum > 1)
-			die(1, "More than one section header\n\n");
+			die(1, "More than one section header");
 
 		fseek(f, elf32.e_phoff, SEEK_SET);
 		fread(ph32, 1, sizeof(ph32), f);
 
-		fseek(f, elf32.e_shoff, SEEK_SET);
-		fread(&sh32, 1, sizeof(sh32), f);
-
-		for (i=0; elf32.e_phnum>i; i++) {
+		for (i=0; i<elf32.e_phnum; i++) {
 			obj_len[i] = (size_t)ph32[i].p_filesz;
 			obj[i] = (unsigned char*)malloc(obj_len[i]);
 			fseek(f, ph32[i].p_offset, SEEK_SET);
@@ -231,6 +229,9 @@ void read_elf(char *kernelimg)
 		}
 
 		if (elf32.e_shnum) {
+			fseek(f, elf32.e_shoff, SEEK_SET);
+			fread(&sh32, 1, sizeof(sh32), f);
+
 			obj_len[3] = (size_t)sh32.sh_size;
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, sh32.sh_offset, SEEK_SET);
@@ -250,33 +251,30 @@ void read_elf(char *kernelimg)
 		fread(&elf64, 1, sizeof(elf64), f);
 
 		if (elf64.e_ehsize != sizeof(elf64))
-			die(1, "Header size not %d\n\n", sizeof(elf64));
+			die(1, "Header size not %d", sizeof(elf64));
 
 		if (elf64.e_machine != EM_ARM)
-			die(1, "ELF machine is not ARM\n\n");
+			die(1, "ELF machine is not ARM");
 
 		if (elf64.e_version != 1)
-			die(1, "Unknown ELF version\n\n");
+			die(1, "Unknown ELF version");
 
 		if (elf64.e_phentsize != sizeof(ph64[0]))
-			die(1, "Program header size not %d\n\n", sizeof(ph64[0]));
+			die(1, "Program header size not %d", sizeof(ph64[0]));
 
-		if (elf64.e_phnum <= 1 || elf64.e_phnum > 3)
-			die(1, "Unexpected number of elements: %d\n\n", elf64.e_phnum);
+		if (elf64.e_phnum < 2 || elf64.e_phnum > 3)
+			die(1, "Unexpected number of elements: %d", elf64.e_phnum);
 
 		if (elf64.e_shnum && elf64.e_shentsize != sizeof(sh64))
-			die(1, "Section header size not %d\n\n", sizeof(sh64));
+			die(1, "Section header size not %d", sizeof(sh64));
 
 		if (elf64.e_shnum > 1)
-			die(1, "More than one section header\n\n");
+			die(1, "More than one section header");
 
 		fseek(f, (long)elf64.e_phoff, SEEK_SET);
 		fread(ph64, 1, sizeof(ph64), f);
 
-		fseek(f, (long)elf64.e_shoff, SEEK_SET);
-		fread(&sh64, 1, sizeof(sh64), f);
-
-		for (i=0; elf64.e_phnum>i; i++) {
+		for (i=0; i<elf64.e_phnum; i++) {
 			obj_len[i] = (size_t)ph64[i].p_filesz;
 			obj[i] = (unsigned char*)malloc(obj_len[i]);
 			fseek(f, (long)ph64[i].p_offset, SEEK_SET);
@@ -285,6 +283,9 @@ void read_elf(char *kernelimg)
 		}
 
 		if (elf64.e_shnum) {
+			fseek(f, (long)elf64.e_shoff, SEEK_SET);
+			fread(&sh64, 1, sizeof(sh64), f);
+
 			obj_len[3] = (size_t)sh64.sh_size;
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, (long)sh64.sh_offset, SEEK_SET);
@@ -296,7 +297,7 @@ void read_elf(char *kernelimg)
 		return;
 	}
 	
-	die(1, "Unknown ELF class %d\n\n", elfclass);
+	die(1, "Unknown ELF class %d", elfclass);
 }
 
 int unpackelf_usage()
@@ -309,7 +310,7 @@ void fwrite_str(char* file, char* output)
 {
 	f = fopen(file, "w");
 	if (!f)
-		die(1, "Could not open file %s for writing\n\n", file);
+		die(1, "Could not open file %s for writing", file);
 	fwrite(output, strlen(output), 1, f);
 	fwrite("\n", 1, 1, f);
 	fclose(f);
@@ -355,7 +356,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if (image_file == NULL)
+	if (!image_file)
 		return unpackelf_usage();
 
 	read_elf(image_file);
@@ -364,7 +365,7 @@ int main(int argc, char** argv)
 	sprintf(out_tmp, "%08x", base);
 	sprintf(out_name, "%s/%s-base", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
-	if (unpackelf_quiet == 0)
+	if (!unpackelf_quiet)
 		printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 
 	for (i=0; i<=3; i++) {
@@ -377,7 +378,7 @@ int main(int argc, char** argv)
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
 			fwrite_str(out_name, obj[i]);
-			if (unpackelf_quiet == 0)
+			if (!unpackelf_quiet)
 				printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
 			continue;
 		}
@@ -385,21 +386,21 @@ int main(int argc, char** argv)
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), out_file[i]);
 		f = fopen(out_name, "wb+");
 		if (!f)
-			die(1, "Could not open file %s for writing\n\n", out_name);
+			die(1, "Could not open file %s for writing", out_name);
 		fwrite(obj[i], 1, obj_len[i], f);
 		fclose(f);
 
 		sprintf(out_tmp, "%08x", obj_off[i] - base);
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), off_name[i]);
 		fwrite_str(out_name, out_tmp);
-		if (unpackelf_quiet == 0)
+		if (!unpackelf_quiet)
 			printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 	}
 
 	sprintf(out_tmp, "%d", pagesize);
 	sprintf(out_name, "%s/%s-pagesize", out_dir, basename(image_file));
 	fwrite_str(out_name, out_tmp);
-	if (unpackelf_quiet == 0)
+	if (!unpackelf_quiet)
 		printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
 	return 0;
 }
