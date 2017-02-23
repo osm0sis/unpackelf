@@ -191,7 +191,7 @@ void read_elf(char *kernelimg)
 
 	if (elfclass == ELFCLASS32) {
 		Elf32_Ehdr		elf32;
-		Elf32_Phdr		ph32[3];
+		Elf32_Phdr		ph32[4];
 		Elf32_Shdr		sh32;
 
 		fread(&elf32, 1, sizeof(elf32), f);
@@ -208,7 +208,7 @@ void read_elf(char *kernelimg)
 		if (elf32.e_phentsize != sizeof(ph32[0]))
 			die(1, "Program header size not %d", sizeof(ph32[0]));
 
-		if (elf32.e_phnum < 2 || elf32.e_phnum > 3)
+		if (elf32.e_phnum < 2 || elf32.e_phnum > 4)
 			die(1, "Unexpected number of elements: %d", elf32.e_phnum);
 
 		if (elf32.e_shnum && elf32.e_shentsize != sizeof(sh32))
@@ -236,6 +236,7 @@ void read_elf(char *kernelimg)
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, sh32.sh_offset, SEEK_SET);
 			fread(obj[3], 1, obj_len[3], f);
+			obj[3] = obj[3]+8;
 		}
 
 		fclose(f);
@@ -245,7 +246,7 @@ void read_elf(char *kernelimg)
 
 	if (elfclass == ELFCLASS64) {
 		Elf64_Ehdr		elf64;
-		Elf64_Phdr		ph64[3];
+		Elf64_Phdr		ph64[4];
 		Elf64_Shdr		sh64;
 
 		fread(&elf64, 1, sizeof(elf64), f);
@@ -262,7 +263,7 @@ void read_elf(char *kernelimg)
 		if (elf64.e_phentsize != sizeof(ph64[0]))
 			die(1, "Program header size not %d", sizeof(ph64[0]));
 
-		if (elf64.e_phnum < 2 || elf64.e_phnum > 3)
+		if (elf64.e_phnum < 2 || elf64.e_phnum > 4)
 			die(1, "Unexpected number of elements: %d", elf64.e_phnum);
 
 		if (elf64.e_shnum && elf64.e_shentsize != sizeof(sh64))
@@ -290,6 +291,7 @@ void read_elf(char *kernelimg)
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, (long)sh64.sh_offset, SEEK_SET);
 			fread(obj[3], 1, obj_len[3], f);
+			obj[3] = obj[3]+8;
 		}
 
 		fclose(f);
@@ -373,8 +375,6 @@ int main(int argc, char** argv)
 			continue;
 
 		if (obj_len[i] <= 4096) {
-			if (i>2)
-				obj[i] = obj[i]+8;
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
 			fwrite_str(out_name, obj[i]);
