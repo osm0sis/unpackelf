@@ -143,6 +143,7 @@ __u32t			obj_off[4];
 
 unsigned char	buffer[4096];	
 int				unpackelf_quiet = 0;
+int				unpackelf_headeronly = 0;
 
 void cleanup()
 {
@@ -304,7 +305,7 @@ void read_elf(char *kernelimg)
 
 int unpackelf_usage()
 {
-	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [ -o output_dir | -k kernel | -r ramdisk | -d dtb | -q ]\n\n");
+	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [ -o output_dir | -k kernel | -r ramdisk | -d dtb | -h | -q ]\n\n");
 	return 200;
 }
 
@@ -337,6 +338,10 @@ int main(int argc, char** argv)
 			unpackelf_quiet = 1;
 			argc -= 1;
 			argv += 1;
+		} else if (!strcmp(arg, "-h")) {
+			unpackelf_headeronly = 1;
+			argc -= 1;
+			argv += 1;
 		} else if (argc >= 2) {
 			char *val = argv[1];
 			argc -= 2;
@@ -366,7 +371,8 @@ int main(int argc, char** argv)
 		base = obj_off[0] - 0x00008000;
 	sprintf(out_tmp, "%08x", base);
 	sprintf(out_name, "%s/%s-base", out_dir, basename(image_file));
-	fwrite_str(out_name, out_tmp);
+	if (!unpackelf_headeronly)
+		fwrite_str(out_name, out_tmp);
 	if (!unpackelf_quiet)
 		printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 
@@ -377,29 +383,34 @@ int main(int argc, char** argv)
 		if (obj_len[i] <= 4096) {
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
-			fwrite_str(out_name, obj[i]);
+			if (!unpackelf_headeronly)
+				fwrite_str(out_name, obj[i]);
 			if (!unpackelf_quiet)
 				printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
 			continue;
 		}
 
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), out_file[i]);
-		f = fopen(out_name, "wb+");
-		if (!f)
-			die(1, "Could not open file %s for writing", out_name);
-		fwrite(obj[i], 1, obj_len[i], f);
-		fclose(f);
+		if (!unpackelf_headeronly) {
+			f = fopen(out_name, "wb+");
+			if (!f)
+				die(1, "Could not open file %s for writing", out_name);
+			fwrite(obj[i], 1, obj_len[i], f);
+			fclose(f);
+		}
 
 		sprintf(out_tmp, "%08x", obj_off[i] - base);
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), off_name[i]);
-		fwrite_str(out_name, out_tmp);
+		if (!unpackelf_headeronly)
+			fwrite_str(out_name, out_tmp);
 		if (!unpackelf_quiet)
 			printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
 	}
 
 	sprintf(out_tmp, "%d", pagesize);
 	sprintf(out_name, "%s/%s-pagesize", out_dir, basename(image_file));
-	fwrite_str(out_name, out_tmp);
+	if (!unpackelf_headeronly)
+		fwrite_str(out_name, out_tmp);
 	if (!unpackelf_quiet)
 		printf("BOARD_PAGE_SIZE=\"%d\"\n", pagesize);
 	return 0;
