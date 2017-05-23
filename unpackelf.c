@@ -326,6 +326,7 @@ int main(int argc, char** argv)
 	char	*out_dir = "./";
 	char	out_name[PATH_MAX];
 	char	out_tmp[200];
+	int		found_cmdline = 0;
 	int		pagesize = 4096;	/* hardcoded as there is no way to determine it from the ELF header */
 	int		base = 0;
 	int		i;
@@ -377,9 +378,8 @@ int main(int argc, char** argv)
 		printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
 
 	for (i=0; i<=3; i++) {
-		if (!obj_len[i])
+		if ((!obj_len[i]) || (found_cmdline))
 			continue;
-
 		if (obj_len[i] <= 4096) {
 			obj[i][strcspn(obj[i], "\n")] = 0;
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
@@ -387,6 +387,7 @@ int main(int argc, char** argv)
 				fwrite_str(out_name, obj[i]);
 			if (!unpackelf_quiet)
 				printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
+			found_cmdline = 1;
 			continue;
 		}
 
