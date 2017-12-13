@@ -25,7 +25,7 @@ endif
 all: unpackelf$(EXE)
 
 static:
-	make LDFLAGS="$(LDGLAGS) -static"
+	make LDFLAGS="$(LDFLAGS) -static"
 
 unpackelf$(EXE):unpackelf.o
 	$(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS)
