@@ -381,10 +381,10 @@ int main(int argc, char** argv)
 		if ((!obj_len[i]) || (found_cmdline))
 			continue;
 		if (obj_len[i] <= 4096) {
-			obj[i][strcspn(obj[i], "\n")] = 0;
+			obj[i][strcspn((const char*)obj[i], "\n")] = 0;
 			sprintf(out_name, "%s/%s-cmdline", out_dir, basename(image_file));
 			if (!unpackelf_headeronly)
-				fwrite_str(out_name, obj[i]);
+				fwrite_str(out_name, (char*)obj[i]);
 			if (!unpackelf_quiet)
 				printf("BOARD_KERNEL_CMDLINE=\"%s\"\n", obj[i]);
 			found_cmdline = 1;
