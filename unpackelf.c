@@ -305,7 +305,7 @@ void read_elf(char *kernelimg)
 
 int unpackelf_usage()
 {
-	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [ -o output_dir | -k kernel | -r ramdisk | -d dtb | -h | -q ]\n\n");
+	fprintf(stderr, "Usage: unpackelf -i kernel_elf_image [ -o output_dir | -k kernel | -r ramdisk | -d dt | -h | -q ]\n\n");
 	return 200;
 }
 
@@ -322,7 +322,7 @@ void fwrite_str(char* file, char* output)
 int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
-	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dtb" };
+	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dt" };
 	char	*out_dir = "./";
 	char	out_name[PATH_MAX];
 	char	out_tmp[200];
