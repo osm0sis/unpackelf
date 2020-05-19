@@ -136,7 +136,7 @@ typedef struct elf64_shdr {
 
 FILE			*f = NULL;
 static char		*obj_name[] = { "KERNEL", "RAMDISK", "TAGS" };
-static char		*off_name[] = { "kerneloff", "ramdiskoff", "tagsoff" };
+static char		*off_name[] = { "kernel_offset", "ramdisk_offset", "tags_offset" };
 unsigned char	*obj[4] = { NULL, NULL, NULL, NULL };
 size_t			obj_len[4];
 __u32t			obj_off[4];
