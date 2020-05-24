@@ -370,12 +370,12 @@ int main(int argc, char** argv)
 	read_elf(image_file);
 	if (obj_off[1] > 0x10000000)
 		base = obj_off[0] - 0x00008000;
-	sprintf(out_tmp, "%08x", base);
+	sprintf(out_tmp, "0x%08x", base);
 	sprintf(out_name, "%s/%s-base", out_dir, basename(image_file));
 	if (!unpackelf_headeronly)
 		fwrite_str(out_name, out_tmp);
 	if (!unpackelf_quiet)
-		printf("BOARD_KERNEL_BASE=\"%08x\"\n", base);
+		printf("BOARD_KERNEL_BASE=\"0x%08x\"\n", base);
 
 	for (i=0; i<=3; i++) {
 		if ((!obj_len[i]) || (found_cmdline))
@@ -400,12 +400,12 @@ int main(int argc, char** argv)
 			fclose(f);
 		}
 
-		sprintf(out_tmp, "%08x", obj_off[i] - base);
+		sprintf(out_tmp, "0x%08x", obj_off[i] - base);
 		sprintf(out_name, "%s/%s-%s", out_dir, basename(image_file), off_name[i]);
 		if (!unpackelf_headeronly)
 			fwrite_str(out_name, out_tmp);
 		if (!unpackelf_quiet)
-			printf("BOARD_%s_OFFSET=\"%08x\"\n", obj_name[i], obj_off[i] - base);
+			printf("BOARD_%s_OFFSET=\"0x%08x\"\n", obj_name[i], obj_off[i] - base);
 	}
 
 	sprintf(out_tmp, "%d", pagesize);
