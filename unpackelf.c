@@ -322,7 +322,7 @@ void fwrite_str(char* file, char* output)
 int main(int argc, char** argv)
 {
 	char	*image_file = NULL;
-	char	*out_file[3] = { "zImage", "ramdisk.cpio.gz", "dt" };
+	char	*out_file[3] = { "kernel", "ramdisk", "dt" };
 	char	*out_dir = "./";
 	char	out_name[PATH_MAX];
 	char	out_tmp[200];
