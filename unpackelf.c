@@ -179,7 +179,7 @@ void read_elf(char *kernelimg)
 	if (!f)
 		die(1, "Could not open kernel image %s", kernelimg);
 
-	fread(buffer, 1, sizeof(buffer), f);
+	if (fread(buffer, 1, sizeof(buffer), f)) {};
 	if (buffer[EI_MAG0] != 0x7f ||
 		buffer[EI_MAG1] != 'E' ||
 		buffer[EI_MAG2] != 'L' ||
@@ -195,7 +195,7 @@ void read_elf(char *kernelimg)
 		Elf32_Phdr		ph32[4];
 		Elf32_Shdr		sh32;
 
-		fread(&elf32, 1, sizeof(elf32), f);
+		if (fread(&elf32, 1, sizeof(elf32), f)) {};
 
 		if (elf32.e_ehsize != sizeof(elf32))
 			die(1, "Header size not %d", sizeof(elf32));
@@ -219,24 +219,24 @@ void read_elf(char *kernelimg)
 			die(1, "More than one section header");
 
 		fseek(f, elf32.e_phoff, SEEK_SET);
-		fread(ph32, 1, sizeof(ph32), f);
+		if (fread(ph32, 1, sizeof(ph32), f)) {};
 
 		for (i=0; i<elf32.e_phnum; i++) {
 			obj_len[i] = (size_t)ph32[i].p_filesz;
 			obj[i] = (unsigned char*)malloc(obj_len[i]);
 			fseek(f, ph32[i].p_offset, SEEK_SET);
-			fread(obj[i], 1, obj_len[i], f);
+			if (fread(obj[i], 1, obj_len[i], f)) {};
 			obj_off[i] = ph32[i].p_paddr;
 		}
 
 		if (elf32.e_shnum) {
 			fseek(f, elf32.e_shoff, SEEK_SET);
-			fread(&sh32, 1, sizeof(sh32), f);
+			if (fread(&sh32, 1, sizeof(sh32), f)) {};
 
 			obj_len[3] = (size_t)sh32.sh_size;
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, sh32.sh_offset, SEEK_SET);
-			fread(obj[3], 1, obj_len[3], f);
+			if (fread(obj[3], 1, obj_len[3], f)) {};
 			obj[3] = obj[3]+8;
 		}
 
@@ -250,7 +250,7 @@ void read_elf(char *kernelimg)
 		Elf64_Phdr		ph64[4];
 		Elf64_Shdr		sh64;
 
-		fread(&elf64, 1, sizeof(elf64), f);
+		if (fread(&elf64, 1, sizeof(elf64), f)) {};
 
 		if (elf64.e_ehsize != sizeof(elf64))
 			die(1, "Header size not %d", sizeof(elf64));
@@ -274,24 +274,24 @@ void read_elf(char *kernelimg)
 			die(1, "More than one section header");
 
 		fseek(f, (long)elf64.e_phoff, SEEK_SET);
-		fread(ph64, 1, sizeof(ph64), f);
+		if (fread(ph64, 1, sizeof(ph64), f)) {};
 
 		for (i=0; i<elf64.e_phnum; i++) {
 			obj_len[i] = (size_t)ph64[i].p_filesz;
 			obj[i] = (unsigned char*)malloc(obj_len[i]);
 			fseek(f, (long)ph64[i].p_offset, SEEK_SET);
-			fread(obj[i], 1, obj_len[i], f);
+			if (fread(obj[i], 1, obj_len[i], f)) {};
 			obj_off[i] = (__u32t)ph64[i].p_paddr;
 		}
 
 		if (elf64.e_shnum) {
 			fseek(f, (long)elf64.e_shoff, SEEK_SET);
-			fread(&sh64, 1, sizeof(sh64), f);
+			if (fread(&sh64, 1, sizeof(sh64), f)) {};
 
 			obj_len[3] = (size_t)sh64.sh_size;
 			obj[3] = (unsigned char*)malloc(obj_len[3]+1);
 			fseek(f, (long)sh64.sh_offset, SEEK_SET);
-			fread(obj[3], 1, obj_len[3], f);
+			if (fread(obj[3], 1, obj_len[3], f)) {};
 			obj[3] = obj[3]+8;
 		}
 
