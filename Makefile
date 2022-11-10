@@ -1,39 +1,47 @@
 ifeq ($(CC),cc)
 CC = gcc
 endif
+AR = ar rc
 ifeq ($(windir),)
-EXE =
+EXT =
 RM = rm -f
+CP = cp
 else
-EXE = .exe
+EXT = .exe
 RM = del
+CP = copy /y
 endif
 
-CFLAGS = -ffunction-sections -O3
+CFLAGS += -ffunction-sections -O3
+
+INC = -I.
 
 ifneq (,$(findstring darwin,$(CROSS_COMPILE)))
-    UNAME_S := Darwin
+	UNAME_S := Darwin
 else
-    UNAME_S := $(shell uname -s)
+	UNAME_S := $(shell uname -s)
 endif
 ifeq ($(UNAME_S),Darwin)
-    LDFLAGS += -Wl,-dead_strip
+	LDFLAGS += -Wl,-dead_strip
 else
-    LDFLAGS += -Wl,--gc-sections -s
+	LDFLAGS += -Wl,--gc-sections -s
 endif
 
-all: unpackelf$(EXE)
+all:unpackelf$(EXT)
 
 static:
-	$(MAKE) LDFLAGS="$(LDFLAGS) -static"
+	$(MAKE) CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS) -static"
 
-unpackelf$(EXE):unpackelf.o
+unpackelf$(EXT):unpackelf.o
 	$(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS)
 
-unpackelf.o:unpackelf.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $< -Werror
+%.o:%.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $< $(INC) -Werror
+
+install:
+	install -m 755 unpackelf$(EXT) $(PREFIX)/bin
 
 clean:
 	$(RM) unpackelf
-	$(RM) *.~ *.exe *.o
+	$(RM) *.a *.~ *.exe *.o
 
